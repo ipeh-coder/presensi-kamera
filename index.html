@@ -89,14 +89,15 @@
         console.error(error);
       }
     }
-      
+  
 function capture() {
   const video = document.getElementById("video");
   const canvas = document.getElementById("canvas");
   const photo = document.getElementById("photo");
+  const status = document.getElementById("status");
 
   if (!video.videoWidth) {
-    alert("Kamera belum siap.");
+    alert("Kamera belum siap. Tunggu beberapa saat.");
     return;
   }
 
@@ -107,27 +108,31 @@ function capture() {
     video, 0, 0, canvas.width, canvas.height
   );
 
-  const imageData = canvas.toDataURL("image/jpeg", 0.85);
+  const imageData = canvas.toDataURL("image/jpeg", 0.75);
 
   photo.src = imageData;
   photo.hidden = false;
 
-  if (window.opener && !window.opener.closed) {
-    window.opener.postMessage({
-      type: "PRESENSI_SELFIE",
-      image: imageData
-    }, "*");
-
-    document.getElementById("status").textContent =
-      "Selfie berhasil dikirim ke formulir presensi.";
-
-    setTimeout(() => window.close(), 1000);
-
-  } else {
-    document.getElementById("status").textContent =
-      "Halaman presensi asal tidak ditemukan. Buka kamera dari formulir presensi.";
+  if (!window.opener || window.opener.closed) {
+    status.textContent =
+      "Halaman presensi tidak ditemukan. Buka kamera dari formulir presensi.";
+    return;
   }
+
+  window.opener.postMessage({
+    type: "PRESENSI_SELFIE",
+    image: imageData
+  }, "*");
+
+  status.textContent = "Selfie berhasil dikirim ke formulir presensi.";
+
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(track => track.stop());
+  }
+
+  setTimeout(() => window.close(), 1200);
 }
+
 
   </script>
 
