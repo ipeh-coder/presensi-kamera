@@ -1,0 +1,119 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kamera Presensi Ceker Pedas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 30px auto;
+      padding: 20px;
+      text-align: center;
+      background: #f5f5f5;
+    }
+    video, canvas, img {
+      width: 100%;
+      border-radius: 12px;
+      background: #222;
+      margin-top: 15px;
+    }
+    button {
+      padding: 13px 20px;
+      margin: 8px 4px;
+      border: 0;
+      border-radius: 8px;
+      background: #176b45;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: .5;
+    }
+    #status {
+      margin: 15px 0;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Presensi Ceker Pedas</h2>
+  <p>Silakan aktifkan kamera untuk mengambil selfie.</p>
+
+  <video id="video" autoplay playsinline muted></video>
+
+  <div>
+    <button id="startBtn" onclick="startCamera()">
+      Aktifkan Kamera
+    </button>
+    <button id="captureBtn" onclick="capture()" disabled>
+      Ambil Selfie
+    </button>
+  </div>
+
+  <p id="status">Kamera belum diaktifkan.</p>
+
+  <canvas id="canvas" hidden></canvas>
+  <img id="photo" hidden alt="Hasil selfie">
+
+  <script>
+    let cameraStream = null;
+
+    async function startCamera() {
+      const status = document.getElementById("status");
+      const video = document.getElementById("video");
+
+      try {
+        if (!navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia) {
+          throw new Error("Browser tidak mendukung kamera atau halaman belum HTTPS.");
+        }
+
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" },
+          audio: false
+        });
+
+        video.srcObject = cameraStream;
+        await video.play();
+
+        document.getElementById("captureBtn").disabled = false;
+        status.textContent = "Kamera aktif. Silakan ambil selfie.";
+      } catch (error) {
+        status.textContent =
+          "Kamera gagal: " + error.name + " - " + error.message;
+        console.error(error);
+      }
+    }
+
+    function capture() {
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const photo = document.getElementById("photo");
+
+      if (!video.videoWidth) {
+        alert("Kamera belum siap. Tunggu beberapa saat.");
+        return;
+      }
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      canvas.getContext("2d").drawImage(
+        video, 0, 0, canvas.width, canvas.height
+      );
+
+      photo.src = canvas.toDataURL("image/jpeg", 0.85);
+      photo.hidden = false;
+
+      document.getElementById("status").textContent =
+        "Selfie berhasil diambil.";
+    }
+  </script>
+
+</body>
+</html>
